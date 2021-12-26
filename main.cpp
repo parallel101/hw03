@@ -1,8 +1,12 @@
+#include <cstddef>
 #include <iostream>
 #include <vector>
 #include <variant>
 
+#include "cpp_type_name.h"
+
 // 请修复这个函数的定义：10 分
+template <class T>
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
     for (size_t i = 0; i < a.size(); i++) {
@@ -16,19 +20,48 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
 
 // 请修复这个函数的定义：10 分
 template <class T1, class T2>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+decltype(auto) operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1{} + T2{});
+    std::vector<T0> res;
+    for(size_t i=0; i<a.size()&&i<b.size(); i++){
+        res.push_back(a[i]+b[i]);
+    }
+    return res;
 }
 
 template <class T1, class T2>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
+decltype(auto) operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([&](auto const&x, auto const& y){
+        return x + y;
+    }, a, b);
+}
+
+template <class T1, class T2, class T3>
+decltype(auto) operator+(std::vector<T3> const &a, std::variant<T1, T2> const &b) {
+    // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([&](auto const&y){
+        return a + y;
+    }, b);
+}
+
+template <class T1, class T2, class T3>
+decltype(auto) operator+(std::variant<T1, T2> const &a, std::vector<T3> const &b) {
+    // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([&](auto const&x){
+        return x + b;
+    }, a);
 }
 
 template <class T1, class T2>
 std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
+    std::visit([&](auto const& x){
+        os << x;
+    }, a);
+    return os;
 }
 
 int main() {
@@ -46,6 +79,7 @@ int main() {
 
     std::variant<std::vector<int>, std::vector<double>> d = c;
     std::variant<std::vector<int>, std::vector<double>> e = a;
+    
     d = d + c + e;
 
     // 应该输出 {9.28, 17.436, 7.236}
