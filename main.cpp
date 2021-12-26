@@ -68,10 +68,12 @@ std::variant<T1, T2> operator+(T2 const &b, std::variant<T1, T2> const &a)
 
 template <class T1, class T2>
 std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
-    // 请实现自动匹配容器中具体类型的加法！10 分
-    if (std::holds_alternative<T1>(b))
-        return a + std::get<T1>(b);
-    return a + std::get<T2>(b);
+    // 请实现自动匹配容器中具体类型的加法！10 分 
+    return std::visit(
+        [&](auto const &t1, auto const &t2)->std::variant<T1, T2> 
+        { 
+            return t1 + t2;
+        }, a, b);
 }
 
 
