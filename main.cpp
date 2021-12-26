@@ -1,24 +1,33 @@
+#include "printer.h"
+
 #include <iostream>
 #include <vector>
-#include <variant>
-#include <concepts>
 
 
 // 请修复这个函数的定义：10 分
-template <class T>
-std::ostream& operator<<(std::ostream& os, std::vector<T> const& a) {
-	os << "{";
-	for (size_t i = 0; i < a.size(); i++) {
-		os << a[i];
-		if (i != a.size() - 1)
-			os << ", ";
-	}
-	os << "}";
-	return os;
-}
+//template <class T>
+//std::ostream& operator<<(std::ostream& os, std::vector<T> const& a) {
+//	os << "{";
+//	for (size_t i = 0; i < a.size(); i++) {
+//		os << a[i];
+//		if (i != a.size() - 1)
+//			os << ", ";
+//	}
+//	os << "}";
+//	return os;
+//}
 
 // 请修复这个函数的定义：10 分
-template <class T1, class T2>
+
+template<class T>
+concept NonVoid = !std::same_as<T, void>;
+
+template<class T1, class T2>
+concept Addable = requires (T1 a, T2 b) {
+	{a + b} -> NonVoid;
+};
+
+template <class T1, class T2> requires Addable<T1, T2>
 auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
 	using TR = std::decay_t<decltype(a.back() + b.back())>;
 	std::vector<TR> res;
@@ -32,15 +41,7 @@ auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
 	// 例如 {1, 2} + {3, 4} = {4, 6}
 }
 
-template <class ...Ts>
-std::variant<Ts...> operator+(std::variant<Ts...> const& a, std::variant<Ts...> const& b) {
-	std::variant<Ts...> res;
-	std::visit([&](auto&& arg) {res = arg + b; }, a);
-	return res;
-	// 请实现自动匹配容器中具体类型的加法！10 分
-}
-
-template <class TR, class ...Ts> requires (std::same_as<TR, Ts> || ...)
+template <class TR, class ...Ts> requires SubtypeOf<TR, std::variant<Ts...>> || AnyOf<TR, Ts...>
 std::variant<Ts...> operator+(std::variant<Ts...> const& a, TR const& b) {
 	std::variant<Ts...> res;
 	std::visit([&](auto&& arg) {res = arg + b; }, a);
@@ -48,19 +49,12 @@ std::variant<Ts...> operator+(std::variant<Ts...> const& a, TR const& b) {
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
 
-template <class TL, class ...Ts> requires (std::same_as<TL, Ts> || ...)
+template <class TL, class ...Ts> requires AnyOf<TL, Ts...>
 std::variant<Ts...> operator+(TL const& a, std::variant<Ts...> const& b) {
 	std::variant<Ts...> res;
 	std::visit([&](auto&& arg) {res = a + arg; }, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
-}
-
-template <class ...Ts> requires (sizeof...(Ts) > 0)
-std::ostream& operator<<(std::ostream& os, std::variant<Ts...> const& a) {
-	std::visit([&](auto&& arg) { os << arg; }, a);
-	return os;
-	// 请实现自动匹配容器中具体类型的打印！10 分
 }
 
 int main() {
