@@ -2,8 +2,6 @@
 #include <vector>
 #include <variant>
 
-#include <tuple>
-
 // 请修复这个函数的定义：10 分
 template <class T>
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
