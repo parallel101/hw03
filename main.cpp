@@ -3,6 +3,7 @@
 #include <variant>
 
 // 请修复这个函数的定义：10 分
+template<class T>
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
     for (size_t i = 0; i < a.size(); i++) {
@@ -16,19 +17,45 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
 
 // 请修复这个函数的定义：10 分
 template <class T1, class T2>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1{} + T2{});
+    std::vector<T0> ret;
+    for (size_t i = 0; i < std::min(a.size(), b.size()); i++) {
+        ret.push_back(a[i] + b[i]);
+    }
+    return ret;
 }
 
 template <class T1, class T2>
 std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
+    // auto Vec_a = a.index == 0 ? std::get<T1> (a) : std::get<T2> (b);
+    // auto Vec_b = b.index == 0 ? std::get<T1> (a) : std::get<T2> (b);
+    // return a + b;
+    std::variant<T1, T2> ret;
+    std::visit([&] (auto const &t1, auto const &t2) {
+        ret = t1 + t2;
+    }, a, b);
+    return ret;
 }
 
-template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
-    // 请实现自动匹配容器中具体类型的打印！10 分
+template <class T1, class T2, class T3>
+std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, T3 const &b) {
+    std::variant<T1, T2> ret;
+    std::visit([&] (auto const &t1) {
+        ret = t1 + b;
+    }, a); 
+    return ret;
+}
+
+template <class T1, class... Args>
+std:: ostream &operator<< (std::ostream &os, std::variant<T1, Args ...> const &a) {
+    std::visit([&] (auto const &t){
+        os << t;
+    }, a);
+    return os;
 }
 
 int main() {
