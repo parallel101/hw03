@@ -24,11 +24,30 @@ concept Addable = requires (T1 a, T2 b) {
 	{a + b} -> AnyBut<void>;
 };
 
-template<class T1, class T2, class ...Ts>  //约束：封闭可加对象，T1 + T2 属于 Ts...
-concept AddableClosed = (requires (T1 a, T2 b) {
-	{a + b} -> Same<Ts>;
-} || ...);
+template<template<typename...> typename TypeSet, typename ...Ts1, typename ...Ts2>
+constexpr auto concat(TypeSet<Ts1...>, TypeSet<Ts2...>) -> TypeSet<Ts1..., Ts2...> {
+	return TypeSet<Ts1..., Ts2...>{};
+}
 
+template<template<typename...> typename TypeSet, typename ...Ts1, typename ...Ts2, typename... Rest>
+constexpr auto concat(TypeSet<Ts1...>, TypeSet<Ts2...>, Rest...) {
+	return concat(TypeSet<Ts1..., Ts2...>{}, Rest{}...);
+}
+
+template<template<typename, typename...> typename TypeSet, typename T, typename ...Rest >
+constexpr auto make_unique_typeset(TypeSet<T, Rest...>) {
+	if constexpr ((std::same_as<T, Rest> || ...)) {
+		return make_unique_typeset(TypeSet<Rest... >{});
+	}
+	else {
+		if constexpr (sizeof...(Rest) > 0) {
+			return concat(TypeSet<T>{}, make_unique_typeset(TypeSet<Rest...>{}));
+		}
+		else {
+			return TypeSet<T>{};
+		}
+	}
+}
 
 template <class T1, class T2> requires Addable<T1, T2>   //向量加法，要求向量元素是可加的
 auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
@@ -44,40 +63,28 @@ auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
 	// 例如 {1, 2} + {3, 4} = {4, 6}
 }
 
-template <class TR, class ...Ts> requires (AddableClosed<Ts, TR, Ts..., TR> && ...) && (!Same<TR, std::variant<Ts...>>)
-auto operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对象，要求variant的每个类型和对象都是封闭可加的
-	auto&& res = [] {
-		if constexpr (AnyOf<TR, Ts...>) {
-			return std::variant<Ts...>{};
-		}
-		else {
-			return std::variant<Ts..., TR>{};
-		}
-	}();
+template <class TR, class ...Ts> requires (Addable<Ts, TR> && ...) && (!Same<TR, std::variant<Ts...>>)
+auto operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对象，要求variant的每个子类型和对象都是可加的
+	std::variant<std::decay_t<decltype(std::declval<Ts>() + std::declval<TR>())>...> new_res;
+	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));
 	std::visit([&](auto&& arg) {res = arg + b; }, a);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
 
-template <class TL, class ...Ts> requires (AddableClosed<TL, Ts, Ts..., TL> && ...) && (!Same<TL, std::variant<Ts...>>)
-auto operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对象，要求对象和variant的每个类型都是封闭可加的
-	auto res = []() {
-		if constexpr (AnyOf<TL, Ts...>) {
-			return std::variant<Ts...>{};
-		}
-		else {
-			return std::variant<Ts..., TL>{};
-		}
-	}();
+template <class TL, class ...Ts> requires (Addable<TL, Ts> && ...) && (!Same<TL, std::variant<Ts...>>)
+auto operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对象，要求对象和variant的每个子类型都是可加的
+	std::variant<std::decay_t<decltype(std::declval<TL>() + std::declval<Ts>())>...> new_res;
+	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));
 	std::visit([&](auto&& arg) {res = a + arg; }, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
 
-
-template <class ...Ts> requires (Addable<Ts, std::variant<Ts...>> && ...) && (Addable<std::variant<Ts...>, Ts> && ...)
-std::variant<Ts...> operator+(std::variant<Ts...> const& a, std::variant<Ts...> const& b) { //同类型的variant对象相加，要求variant的任意两个类型都是封闭可加的
-	std::variant<Ts...> res;
+template <class ...TLs, class ...TRs> requires (Addable<TLs, std::variant<TRs...>> && ...) && (Addable<std::variant<TLs...>, TRs> && ...)
+auto operator+(std::variant<TLs...> const& a, std::variant<TRs...> const& b) { //两个variant对象相加，要求第一个variant的任意一个子类型与第二个variant的任意一个子类型可加
+	auto res = make_unique_typeset(
+		concat(a, b, (TLs{} + std::variant<TRs...>{})..., (std::variant<TLs...>{} + TRs{})...));
 	std::visit([&](auto&& arg1, auto&& arg2) {res = arg1 + arg2; }, a, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
