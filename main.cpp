@@ -24,17 +24,17 @@ concept Addable = requires (T1 a, T2 b) {
 	{a + b} -> AnyBut<void>;
 };
 
-template<template<typename...> typename TypeSet, typename ...Ts1, typename ...Ts2>
+template<template<typename...> typename TypeSet, typename ...Ts1, typename ...Ts2>  //类模板参数拼接：递归基
 constexpr auto concat(TypeSet<Ts1...>, TypeSet<Ts2...>) -> TypeSet<Ts1..., Ts2...> {
 	return TypeSet<Ts1..., Ts2...>{};
 }
 
 template<template<typename...> typename TypeSet, typename ...Ts1, typename ...Ts2, typename... Rest>
-constexpr auto concat(TypeSet<Ts1...>, TypeSet<Ts2...>, Rest...) {
+constexpr auto concat(TypeSet<Ts1...>, TypeSet<Ts2...>, Rest...) {    //类模板参数拼接
 	return concat(TypeSet<Ts1..., Ts2...>{}, Rest{}...);
 }
 
-template<template<typename, typename...> typename TypeSet, typename T, typename ...Rest >
+template<template<typename, typename...> typename TypeSet, typename T, typename ...Rest>  //类模板参数去重
 constexpr auto make_unique_typeset(TypeSet<T, Rest...>) {
 	if constexpr ((std::same_as<T, Rest> || ...)) {
 		return make_unique_typeset(TypeSet<Rest... >{});
@@ -65,8 +65,8 @@ auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
 
 template <class TR, class ...Ts> requires (Addable<Ts, TR> && ...) && (!Same<TR, std::variant<Ts...>>)
 auto operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对象，要求variant的每个子类型和对象都是可加的
-	std::variant<std::decay_t<decltype(std::declval<Ts>() + std::declval<TR>())>...> new_res;
-	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));
+	std::variant<std::decay_t<decltype(std::declval<Ts>() + std::declval<TR>())>...> new_res;  //variant通过加法新生成的类型
+	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));  //variant新旧类型进行拼接，然后去重
 	std::visit([&](auto&& arg) {res = arg + b; }, a);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
@@ -74,8 +74,8 @@ auto operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对
 
 template <class TL, class ...Ts> requires (Addable<TL, Ts> && ...) && (!Same<TL, std::variant<Ts...>>)
 auto operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对象，要求对象和variant的每个子类型都是可加的
-	std::variant<std::decay_t<decltype(std::declval<TL>() + std::declval<Ts>())>...> new_res;
-	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));
+	std::variant<std::decay_t<decltype(std::declval<TL>() + std::declval<Ts>())>...> new_res;  //variant通过加法新生成的类型
+	auto res = make_unique_typeset(concat(std::variant<Ts...>{}, new_res));  //variant新旧类型进行拼接，然后去重
 	std::visit([&](auto&& arg) {res = a + arg; }, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
@@ -84,7 +84,7 @@ auto operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对
 template <class ...TLs, class ...TRs> requires (Addable<TLs, std::variant<TRs...>> && ...) && (Addable<std::variant<TLs...>, TRs> && ...)
 auto operator+(std::variant<TLs...> const& a, std::variant<TRs...> const& b) { //两个variant对象相加，要求第一个variant的任意一个子类型与第二个variant的任意一个子类型可加
 	auto res = make_unique_typeset(
-		concat(a, b, (TLs{} + std::variant<TRs...>{})..., (std::variant<TLs...>{} + TRs{})...));
+		concat(a, b, (TLs{} + std::variant<TRs...>{})..., (std::variant<TLs...>{} + TRs{})...));  //variant新旧类型进行拼接，然后去重
 	std::visit([&](auto&& arg1, auto&& arg2) {res = arg1 + arg2; }, a, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
