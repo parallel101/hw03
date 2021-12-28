@@ -24,12 +24,15 @@ concept Addable = requires (T1 a, T2 b) {
 	{a + b} -> AnyBut<void>;
 };
 
-template<class T1, class ...T2>
-concept AddableRs = (Addable<T1, T2> && ...);
+template<class T1, class T2, class ...Ts>  //约束：封闭可加对象，T1 + T2 属于 Ts...
+concept AddableClosed = (requires (T1 a, T2 b) {
+	{a + b} -> Same<Ts>;
+} || ...);
+
 
 template <class T1, class T2> requires Addable<T1, T2>   //向量加法，要求向量元素是可加的
 auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
-	using TR = std::decay_t<decltype(T1() + T2())>;
+	using TR = std::decay_t<decltype(std::declval<T1>() + std::declval<T2>())>;
 	std::vector<TR> res;
 	const auto size = std::min(a.size(), b.size());
 	res.reserve(size);
@@ -41,26 +44,41 @@ auto operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
 	// 例如 {1, 2} + {3, 4} = {4, 6}
 }
 
-template <class TR, class ...Ts> requires (Addable<Ts, TR> && ...) && (!Same<TR, std::variant<Ts...>>)
-std::variant<Ts...> operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对象，要求variant的每个类型和对象都是可加的
-	std::variant<Ts...> res;
+template <class TR, class ...Ts> requires (AddableClosed<Ts, TR, Ts..., TR> && ...) && (!Same<TR, std::variant<Ts...>>)
+auto operator+(std::variant<Ts...> const& a, TR const& b) {  //variant对象+对象，要求variant的每个类型和对象都是封闭可加的
+	auto&& res = [] {
+		if constexpr (AnyOf<TR, Ts...>) {
+			return std::variant<Ts...>{};
+		}
+		else {
+			return std::variant<Ts..., TR>{};
+		}
+	}();
 	std::visit([&](auto&& arg) {res = arg + b; }, a);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
 
-template <class TL, class ...Ts> requires AddableRs<TL, Ts...> && (!Same<TL, std::variant<Ts...>>)
-std::variant<Ts...> operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对象，要求对象和variant的每个类型都是可加的
-	std::variant<Ts...> res;
+template <class TL, class ...Ts> requires (AddableClosed<TL, Ts, Ts..., TL> && ...) && (!Same<TL, std::variant<Ts...>>)
+auto operator+(TL const& a, std::variant<Ts...> const& b) {  //对象+variant对象，要求对象和variant的每个类型都是封闭可加的
+	auto res = []() {
+		if constexpr (AnyOf<TL, Ts...>) {
+			return std::variant<Ts...>{};
+		}
+		else {
+			return std::variant<Ts..., TL>{};
+		}
+	}();
 	std::visit([&](auto&& arg) {res = a + arg; }, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
 
-template <class ...Ts> requires  (AddableRs<Ts, Ts...> && ... )
-std::variant<Ts...> operator+(std::variant<Ts...> const& a, std::variant<Ts...> const& b) { //同类型的variant对象相加，要求variant的任意两个类型都是可加的
+
+template <class ...Ts> requires (Addable<Ts, std::variant<Ts...>> && ...) && (Addable<std::variant<Ts...>, Ts> && ...)
+std::variant<Ts...> operator+(std::variant<Ts...> const& a, std::variant<Ts...> const& b) { //同类型的variant对象相加，要求variant的任意两个类型都是封闭可加的
 	std::variant<Ts...> res;
-	std::visit([&](auto&& arg) {res = arg + b; }, a);
+	std::visit([&](auto&& arg1, auto&& arg2) {res = arg1 + arg2; }, a, b);
 	return res;
 	// 请实现自动匹配容器中具体类型的加法！10 分
 }
