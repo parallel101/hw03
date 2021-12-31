@@ -1,18 +1,12 @@
 # 高性能并行编程与优化 - 第0x讲的回家作业
 
-通过 pull request 提交作业。会批分数，但是：
+1. template<class T> for vector function
+2. vector的加法函数，使用 using T0 = decltype(T1{} + T2{}) 获取结果的类型
+3. 添加 std::variant<std::vector<int>, std::vector<double> > 与 std::vector<double> 相加的函数
+4. 使用 std::visit 实现自动匹配容器的加法和打印
+5. 由auto自动推断返回类型可以有效避免在vector中推断所含成员类型
+6. 用decltype推导出两个vector相加的类型
 
-没有结业证书，回家作业仅仅作为评估学习效果和巩固知识的手段，不必为分数感到紧张 :)
-量力而行，只要能在本课中，学到昨天的自己不懂的知识，就是胜利，没必要和别人攀比。
-注意不要偷看别人的作业哦！
-
-- 课件：https://github.com/parallel101/course
-- 录播：https://space.bilibili.com/263032155
-
-作业提交时间不限 :) 即使完结了还想交的话我也会看的~ 不过最好在下一讲开播前完成。
-
-- 如何开 pull request：https://zhuanlan.zhihu.com/p/51199833
-- 如何设置 https 代理：https://www.jianshu.com/p/b481d2a42274
 
 ## 评分规则
 
