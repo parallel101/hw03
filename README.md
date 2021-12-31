@@ -1,12 +1,15 @@
 # 高性能并行编程与优化 - 第0x讲的回家作业
 
-1. template<class T> for vector function
+1. template<class T> for vector function 避免重复写代码, 其中 T 可以变成任意类型
 2. vector的加法函数，使用 using T0 = decltype(T1{} + T2{}) 获取结果的类型
 3. 添加 std::variant<std::vector<int>, std::vector<double> > 与 std::vector<double> 相加的函数
 4. 使用 std::visit 实现自动匹配容器的加法和打印
-5. 由auto自动推断返回类型可以有效避免在vector中推断所含成员类型
+5. 由auto自动推断返回类型可以有效避免在vector中推断所含成员类型没有auto的话，需要声明一个变量，必须重复一遍他的类型，非常麻烦
 6. 用decltype推导出两个vector相加的类型
-
+7. 用variant不用visit，就像看四大名著不看红楼梦，后面我忘了，总之就是只能度过一个相对失败的人生 :)
+8. 如果 lambda 表达式不通过->指定类型，则和->auto等价，自动根据函数体内的return语句决定返回类型，如果没有return,语句则相当于->void
+9. std::visit、std::variant 的这种模式称为静态多态，和虚函数、抽象类的动态多态相对. 静态多态的优点是：性能开销小，存储大小固定。缺点是：类型固定，不能运行时扩充。
+10. 这下基本学废！
 
 ## 评分规则
 
