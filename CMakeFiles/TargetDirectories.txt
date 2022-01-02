@@ -1,3 +1,0 @@
-D:/Project/高性能并行编程与优化/hw03/CMakeFiles/main.dir
-D:/Project/高性能并行编程与优化/hw03/CMakeFiles/ALL_BUILD.dir
-D:/Project/高性能并行编程与优化/hw03/CMakeFiles/ZERO_CHECK.dir
