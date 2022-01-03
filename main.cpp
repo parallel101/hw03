@@ -1,8 +1,9 @@
 #include <iostream>
-#include <vector>
 #include <variant>
+#include <vector>
 
-// 请修复这个函数的定义：10 分
+// 请修复这个函数的定义：10 分 -> 添加 template 关键字
+template <class T>
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
     for (size_t i = 0; i < a.size(); i++) {
@@ -14,21 +15,38 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     return os;
 }
 
-// 请修复这个函数的定义：10 分
+// 请修复这个函数的定义：10 分 -> 修改返回值为 auto 自动推导
 template <class T1, class T2>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1{} + T2{});
+    std::vector<T0> result;
+    size_t result_size = std::min(a.size(), b.size());
+    result.reserve(result_size);  // 因为这里知道最终 size，提前申请内存空间以避免 push_back 时不必要的申请和拷贝。
+    for (size_t i = 0; i < result_size; i++) {
+        result.push_back(a[i] + b[i]);
+    }
+    return result;
 }
 
 template <class T1, class T2>
 std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([](auto const &t1, auto const &t2) {  // 这里是不是不需要 [&]？
+        return std::variant<T1, T2>{t1 + t2};
+    },
+                      a, b);
 }
 
 template <class T1, class T2>
 std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
+    std::visit([&](auto const &t) {
+        os << t;
+    },
+               a);
+    return os;
 }
 
 int main() {
@@ -46,7 +64,7 @@ int main() {
 
     std::variant<std::vector<int>, std::vector<double>> d = c;
     std::variant<std::vector<int>, std::vector<double>> e = a;
-    d = d + c + e;
+    d = d + std::variant<std::vector<int>, std::vector<double>>{c} + e;
 
     // 应该输出 {9.28, 17.436, 7.236}
     std::cout << d << std::endl;
