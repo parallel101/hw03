@@ -27,3 +27,6 @@ std::string cpp_type_name() {
         s += " &&";
     return s;
 }
+
+
+#define SHOW(T) std::cout << cpp_type_name<T>() << std::endl;
