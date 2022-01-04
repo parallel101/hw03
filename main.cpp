@@ -24,14 +24,13 @@ decltype(auto) operator+(std::vector<T1> const& a, std::vector<T2> const& b) {
     std::vector<decltype(T1{} + T2{}) > out;
     auto x = a.cbegin();
     auto y = b.cbegin();
-    for (;x != a.cend() && y != b.cend(); ++x, ++y) {
+    for (;x != a.cend() && y != b.cend(); ++x, ++y)
         out.emplace_back(*x + *y);
-    }
     return out;
 }
 
 template <class T1, class T2>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
+decltype(auto) operator+(std::variant<T1, T2> const& a, std::variant<T1, T2> const& b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
     std::variant<T1, T2> out;
     if (std::holds_alternative<T1>(a) && std::holds_alternative<T1>(b))
@@ -45,27 +44,38 @@ std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T
     return out;
 }
 
-template <class T1, class T2, class T3>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const& a, std::vector<T3> const& b) {
+template<class O, class V, class R, size_t N>
+constexpr void add_v(O& o, V const& a, R const& b) {
+    try
+    {
+        if (N == a.index())
+            o = std::get<N>(a) + b;
+    }
+    catch (std::bad_variant_access const& ex)
+    {
+        std::cout << ex.what();
+    }
+}
+
+template<class O, class V, class R, size_t...N>
+decltype(auto) unpack_n(O& o, V const& a, R const& b, std::index_sequence<N...>) {
+    static_cast<void>(std::initializer_list<int>{(add_v<O, V, R, N>(o, a, b), 0)...});
+}
+
+template <class... Args, class T>
+decltype(auto) operator+(std::variant<Args...> const& a, std::vector<T> const& b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
-    std::variant<T1, T2> out;
-    if (std::holds_alternative<T1>(a))
-        out = std::get<T1>(a) + b;
-    else if (std::holds_alternative<T2>(a))
-        out = std::get<T2>(a) + b;
+    std::variant<Args...> out;
+    unpack_n(out, a, b, std::make_index_sequence<sizeof...(Args)>{});
     return out;
 }
 
 template<class V, size_t N>
-constexpr void printV(std::ostream& os, V const& a) {
+constexpr decltype(auto) print_v(std::ostream& os, V const& a) {
     try
     {
-        if (N == a.index()) {
-            auto& e = std::get<N>(a);
-            using E = std::remove_cvref_t<decltype(e)>; // pure type
-            if (std::holds_alternative<E>(a)) 
-                os << e;
-        }
+        if (N == a.index())
+            os << std::get<N>(a);
     }
     catch (std::bad_variant_access const& ex)
     {
@@ -74,8 +84,8 @@ constexpr void printV(std::ostream& os, V const& a) {
 }
 
 template<class V, size_t...N>
-std::ostream& unpackN(std::ostream& os, V const& a, std::index_sequence<N...>) {
-    static_cast<void>(std::initializer_list<int>{(printV<V, N>(os, a), 0)...});
+std::ostream& unpack_n(std::ostream& os, V const& a, std::index_sequence<N...>) {
+    static_cast<void>(std::initializer_list<int>{(print_v<V, N>(os, a), 0)...});
     return os;
 }
 
@@ -83,7 +93,7 @@ template <class... Args>
     requires (sizeof...(Args) > 0)  // no std::variant<>
 std::ostream &operator<<(std::ostream &os, std::variant<Args...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
-    return unpackN(os, a, std::make_index_sequence<sizeof...(Args)>{});
+    return unpack_n(os, a, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 int main() {
