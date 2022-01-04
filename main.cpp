@@ -79,14 +79,10 @@ template<class O, class V, class R, Operator ops, size_t N>
 constexpr decltype(auto) op_vector_v(O& o, V const& a, R const& b) noexcept {
     if (N == a.index()) {
         auto& e = std::get<N>(a);
-        if (e.size() == 0) // support empty type
-            o = b;
-        else {
-            if constexpr (ops == Operator::Add) o = e + b;
-            else if constexpr (ops == Operator::Sub) o = e - b;
-            else if constexpr (ops == Operator::Mul) o = e * b;
-            else if constexpr (ops == Operator::Div) o = e / b;
-        }
+        if constexpr (ops == Operator::Add) o = e + b;
+        else if constexpr (ops == Operator::Sub) o = e - b;
+        else if constexpr (ops == Operator::Mul) o = e * b;
+        else if constexpr (ops == Operator::Div) o = e / b;
     }
 }
 
@@ -165,32 +161,28 @@ constexpr decltype(auto) unpack_n_variant(O& o, V const& a, std::index_sequence<
 template <class... Args>
 constexpr decltype(auto) operator+(std::variant<Args...> const& a, std::variant<Args...> const& b) noexcept {
     // 请实现自动匹配容器中具体类型的加法！10 分
-    std::variant<Args...> out;
-    unpack_n_variant<decltype(out), decltype(a), Operator::Add>(out, a, std::index_sequence_for<Args...>{});
+    auto out = a;
     unpack_n_variant<decltype(out), decltype(a), Operator::Add>(out, b, std::index_sequence_for<Args...>{});
     return out;
 }
 
 template <class... Args>
 constexpr decltype(auto) operator-(std::variant<Args...> const& a, std::variant<Args...> const& b) noexcept {
-    std::variant<Args...> out;
-    unpack_n_variant<decltype(out), decltype(a), Operator::Add>(out, a, std::index_sequence_for<Args...>{});
+    auto out = a;
     unpack_n_variant<decltype(out), decltype(a), Operator::Sub>(out, b, std::index_sequence_for<Args...>{});
     return out;
 }
 
 template <class... Args>
 constexpr decltype(auto) operator*(std::variant<Args...> const& a, std::variant<Args...> const& b) noexcept {
-    std::variant<Args...> out;
-    unpack_n_variant<decltype(out), decltype(a), Operator::Add>(out, a, std::index_sequence_for<Args...>{});
+    auto out = a;
     unpack_n_variant<decltype(out), decltype(a), Operator::Mul>(out, b, std::index_sequence_for<Args...>{});
     return out;
 }
 
 template <class... Args>
 constexpr decltype(auto) operator/(std::variant<Args...> const& a, std::variant<Args...> const& b) noexcept {
-    std::variant<Args...> out;
-    unpack_n_variant<decltype(out), decltype(a), Operator::Add>(out, a, std::index_sequence_for<Args...>{});
+    auto out = a;
     unpack_n_variant<decltype(out), decltype(a), Operator::Div>(out, b, std::index_sequence_for<Args...>{});
     return out;
 }
