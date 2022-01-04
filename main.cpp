@@ -51,7 +51,7 @@ constexpr void add_v(O& o, V const& a, R const& b) {
 }
 
 template<class O, class V, class R, size_t...N>
-constexpr decltype(auto) unpack_n(O& o, V const& a, R const& b, std::index_sequence<N...>) {
+constexpr decltype(auto) unpack_n_add(O& o, V const& a, R const& b, std::index_sequence<N...>) {
     static_cast<void>(std::initializer_list<int>{(add_v<O, V, R, N>(o, a, b), 0)...});
 }
 
@@ -59,7 +59,7 @@ template <class... Args, class T>
 constexpr decltype(auto) operator+(std::variant<Args...> const& a, std::vector<T> const& b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
     std::variant<Args...> out;
-    unpack_n(out, a, b, std::make_index_sequence<sizeof...(Args)>{});
+    unpack_n_add(out, a, b, std::make_index_sequence<sizeof...(Args)>{});
     return out;
 }
 
@@ -70,7 +70,7 @@ constexpr decltype(auto) print_v(std::ostream& os, V const& a) {
 }
 
 template<class V, size_t...N>
-constexpr std::ostream& unpack_n(std::ostream& os, V const& a, std::index_sequence<N...>) {
+constexpr std::ostream& unpack_n_print(std::ostream& os, V const& a, std::index_sequence<N...>) {
     static_cast<void>(std::initializer_list<int>{(print_v<V, N>(os, a), 0)... });
     return os;
 }
@@ -79,7 +79,7 @@ template <class... Args>
     requires (sizeof...(Args) > 0)  // no std::variant<>
 constexpr std::ostream &operator<<(std::ostream &os, std::variant<Args...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
-    return unpack_n(os, a, std::make_index_sequence<sizeof...(Args)>{});
+    return unpack_n_print(os, a, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 int main() {
