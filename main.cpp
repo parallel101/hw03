@@ -42,12 +42,13 @@ template <class T1, class T2, Operator ops>
 using ops_result_t = ops_result<T1, T2, ops>::type;
 
 template <class T1, class T2, Operator ops>
-decltype(auto) vector_operator(std::vector<T1> const& a, std::vector<T2> const& b) {
+constexpr decltype(auto) vector_operator(std::vector<T1> const& a, std::vector<T2> const& b) {
     std::vector<ops_result_t<T1, T2, ops>> out;
+    out.reserve(std::min(a.size(), b.size()));
     auto x = a.cbegin();
     auto y = b.cbegin();
     for (; x != a.cend() && y != b.cend(); ++x, ++y)
-        out.emplace_back(cal_ops<T1, T2, ops>(*x, *y));
+        out.push_back(std::move(cal_ops<T1, T2, ops>(*x, *y))); // NO RVO
     return out; //NRVO
 }
 
