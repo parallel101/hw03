@@ -57,70 +57,33 @@ std::variant<T1, T2> operator+(std::variant<T1, T2> const& a, std::vector<T3> co
 }
 
 template<class V, size_t N>
-constexpr void finner(std::ostream& os, V const& a) {
-    //if (std::holds_alternative<decltype(std::get<N>(a))>(a)) {
-    //    os << std::get<N>(a);
-    //}
-
-    // auto e = std::get<N>(a);
-    //if (auto* x = std::get_if<int>(&a)) {
-    //    os << *x;
-    //}
-
+constexpr void printV(std::ostream& os, V const& a) {
     try
     {
         if (N == a.index()) {
-            auto e = std::get<N>(a);
-            using E = decltype(e);
+            auto& e = std::get<N>(a);
+            using E = std::remove_cvref_t<decltype(e)>; // pure type
             if (std::holds_alternative<E>(a)) 
                 os << e;
         }
     }
-    catch (std::bad_variant_access const&)
+    catch (std::bad_variant_access const& ex)
     {
-        // std::cout << ex.what();
+        std::cout << ex.what();
     }
 }
 
 template<class V, size_t...N>
-std::ostream& fout(std::ostream& os, V const& a, std::index_sequence<N...>) {
-    //auto func = [&](auto x) {
-    //    os << x;
-    //};
-    //func(std::get<N>(a));
-    auto fc = [&](auto n) {
-        // auto ix = n;
-
-        return n;
-        //if (std::holds_alternative<decltype(std::get<n>(a))>(a)) {
-        //    os << std::get<n>(a);
-        //}
-    };
-
-    static_cast<void>(std::initializer_list<int>{(finner<V, N>(os, a), 0)...});
-    // constexpr auto s = std::initializer_list<int>{(finner<V, N>(os, a), 0)...};
-
-    //constexpr auto s = std::initializer_list<size_t>{ (fc(N))... };
-    //constexpr auto s = std::initializer_list<int>{(finner(os, a, N), 0)...};
-    //for (auto i : s) {
-    //  os << i;
-        //    if (std::holds_alternative<decltype(std::get<i>(a))>(a)) {
-        //        os << std::get<i>(a);
-        //    }
-    //}
-
-    //static_cast<void>(std::initializer_list<int>{(func(std::get<N>(a)), 0)...});
-    //if (std::holds_alternative<decltype(std::get<N>(a))>(a)) {
-    //    os << std::get<N>(a);
-    //}
+std::ostream& unpackN(std::ostream& os, V const& a, std::index_sequence<N...>) {
+    static_cast<void>(std::initializer_list<int>{(printV<V, N>(os, a), 0)...});
     return os;
 }
 
 template <class... Args>
-    requires (sizeof...(Args) > 0)
+    requires (sizeof...(Args) > 0)  // no std::variant<>
 std::ostream &operator<<(std::ostream &os, std::variant<Args...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
-    return fout(os, a, std::make_index_sequence<sizeof...(Args)>{});
+    return unpackN(os, a, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 int main() {
@@ -140,10 +103,6 @@ int main() {
     std::variant<std::vector<int>, std::vector<double>> e = a;
     d = d + c + e;
 
-    //d = b;
-    //std::variant<std::vector<int>, std::vector<std::string>, std::vector<double>> dd;
-    //dd = b;
-    // 
     // 应该输出 {9.28, 17.436, 7.236}
     std::cout << d << std::endl;
 
