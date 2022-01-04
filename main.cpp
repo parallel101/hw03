@@ -46,24 +46,17 @@ decltype(auto) operator+(std::variant<T1, T2> const& a, std::variant<T1, T2> con
 
 template<class O, class V, class R, size_t N>
 constexpr void add_v(O& o, V const& a, R const& b) {
-    try
-    {
-        if (N == a.index())
-            o = std::get<N>(a) + b;
-    }
-    catch (std::bad_variant_access const& ex)
-    {
-        std::cout << ex.what();
-    }
+    if (N == a.index())
+        o = std::get<N>(a) + b;
 }
 
 template<class O, class V, class R, size_t...N>
-decltype(auto) unpack_n(O& o, V const& a, R const& b, std::index_sequence<N...>) {
+constexpr decltype(auto) unpack_n(O& o, V const& a, R const& b, std::index_sequence<N...>) {
     static_cast<void>(std::initializer_list<int>{(add_v<O, V, R, N>(o, a, b), 0)...});
 }
 
 template <class... Args, class T>
-decltype(auto) operator+(std::variant<Args...> const& a, std::vector<T> const& b) {
+constexpr decltype(auto) operator+(std::variant<Args...> const& a, std::vector<T> const& b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
     std::variant<Args...> out;
     unpack_n(out, a, b, std::make_index_sequence<sizeof...(Args)>{});
@@ -72,26 +65,19 @@ decltype(auto) operator+(std::variant<Args...> const& a, std::vector<T> const& b
 
 template<class V, size_t N>
 constexpr decltype(auto) print_v(std::ostream& os, V const& a) {
-    try
-    {
-        if (N == a.index())
-            os << std::get<N>(a);
-    }
-    catch (std::bad_variant_access const& ex)
-    {
-        std::cout << ex.what();
-    }
+    if (N == a.index())
+        os << std::get<N>(a);
 }
 
 template<class V, size_t...N>
-std::ostream& unpack_n(std::ostream& os, V const& a, std::index_sequence<N...>) {
-    static_cast<void>(std::initializer_list<int>{(print_v<V, N>(os, a), 0)...});
+constexpr std::ostream& unpack_n(std::ostream& os, V const& a, std::index_sequence<N...>) {
+    static_cast<void>(std::initializer_list<int>{(print_v<V, N>(os, a), 0)... });
     return os;
 }
 
 template <class... Args>
     requires (sizeof...(Args) > 0)  // no std::variant<>
-std::ostream &operator<<(std::ostream &os, std::variant<Args...> const &a) {
+constexpr std::ostream &operator<<(std::ostream &os, std::variant<Args...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
     return unpack_n(os, a, std::make_index_sequence<sizeof...(Args)>{});
 }
