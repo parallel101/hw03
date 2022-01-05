@@ -24,16 +24,41 @@ auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
 }
 
 template <class T1, class T2>
+std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, T1 const &b)
+{
+    return std::static_cast<std::variant<T1, T2>>(b)+a;
+}
+
+template <class T1, class T2>
+std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, T2 const &b)
+{
+    return std::static_cast<std::variant<T1, T2>>(b)+a;
+}
+
+
+template <class T1, class T2>
+std::variant<T1, T2> operator+(T1 const &a, std::variant<T1, T2> const &b)
+{
+    return std::static_cast<std::variant<T1, T2>>(a)+b;
+}
+
+template <class T1, class T2>
+std::variant<T1, T2> operator+(T2 const &a, std::variant<T1, T2> const &b)
+{
+    return std::static_cast<std::variant<T1, T2>>(a)+b;
+}
+
+template <class T1, class T2>
 std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
     return std::visit([](auto const& x,auto const& y){return x+y;},a,b);
 }
 
-template <class T1, class... T2>
-std::variant<T1, T2...> operator+(std::variant<T1, T2...> const &a, std::variant<T1, T2...> const &b) {
-    // 请实现自动匹配容器中具体类型的加法！10 分
-    return std::visit([](auto const& x,auto const& y){return x+(y + ...);},a,b);
-}
+// template <class T1, class... T2>
+// std::variant<T1, T2...> operator+(std::variant<T1, T2...> const &a, std::variant<T1, T2...> const &b) {
+//     // 请实现自动匹配容器中具体类型的加法！10 分
+//     return std::visit([](auto const& x,auto const& y){return x+(y + ...);},a,b);
+// }
 
 template <class T1, class T2>
 std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
