@@ -41,10 +41,12 @@ auto& operator<<(SubtypeOf<std::ostream> auto& printer, Iterable auto&& containe
 		requires { printer << container[0]; }) && !ConstructibleFrom<decltype(container), const char*>)  //或者 printer 与数组元素兼容，但有特例：字符串不使用该重载！
 {
 	auto [Startpoint, Endpoint] = [&] {
-		if constexpr (BuiltinArray<decltype(container)>)
+		if constexpr (BuiltinArray<decltype(container)>) {
 			return std::tuple{ container, container + sizeof(container) / sizeof(container[0]) };
-		else
+		}
+		else {
 			return std::tuple{ container.begin(), container.end() };
+		}
 	}();
 	std::string_view separator = "";
 	printer << "{";
