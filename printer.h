@@ -37,9 +37,11 @@ auto& operator<<(SubtypeOf<std::ostream> auto& printer, Iterable auto&& containe
 	requires { printer << *std::begin(container); } && !ConstructibleFrom<decltype(container), const char*>) {   //要求 printer 与 begin() 接口兼容，但有特例：字符串不使用该重载！
 
 	std::string_view separator = "";
+	auto const endPoint = std::end(container);
 	printer << "[";
-	for (auto Startpoint = std::begin(container); Startpoint != std::end(container); ++Startpoint)
-		printer << std::exchange(separator, ", ") << *Startpoint;
+	for (auto startPoint = std::begin(container); startPoint != endPoint; ++startPoint) {
+		printer << std::exchange(separator, ", ") << *startPoint;
+	}
 	printer << "]";
 	return printer;
 }
