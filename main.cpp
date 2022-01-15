@@ -3,7 +3,8 @@
 #include <variant>
 
 // 请修复这个函数的定义：10 分
-std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
+template<class T>
+auto &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
     for (size_t i = 0; i < a.size(); i++) {
         os << a[i];
@@ -16,19 +17,38 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
 
 // 请修复这个函数的定义：10 分
 template <class T1, class T2>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1{} + T2{});
+    std::vector<T0> res;
+    for (size_t i = 0; i < std::min(a.size(), b.size()); i++)
+        res.push_back(a[i]+b[i]);
+    return res;
 }
 
 template <class T1, class T2>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
+auto operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([] (auto const &a, auto const &b) -> std::variant<T1, T2> {
+        return a + b;
+    }, a, b);
+}
+
+// 重载+与参数顺序有关, 为了使得main函数中的d+c+e成功运行, 重载一个新的+
+template <class T1, class T2>
+auto operator+(std::variant<T1, T2> const &b, T2 const &a) {
+    std::variant<T1, T2> res = a;
+    return res + b;
 }
 
 template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
+auto &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
+    std::visit([&] (auto const &a) {
+        os << a;
+    }, a);
+    return os;
 }
 
 int main() {
