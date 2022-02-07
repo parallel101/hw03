@@ -3,6 +3,7 @@
 #include <variant>
 
 // 请修复这个函数的定义：10 分
+template<typename T>
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
     for (size_t i = 0; i < a.size(); i++) {
@@ -16,19 +17,55 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
 
 // 请修复这个函数的定义：10 分
 template <class T1, class T2>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1{} + T2{});
+    std::vector<T0> res;
+    for( size_t i = 0; i < std::min(a.size(), b.size());i++){
+        res.push_back(a[i] + b[i]);
+    }
+    return res;
 }
 
 template <class T1, class T2>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
+auto operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
+    return std::visit([&] (auto const& t1,auto const& t2){
+        return std::variant<T1,T2>{t1+t2};
+    },a , b);
 }
 
 template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
+auto operator+(std::variant<T1, T2> const &a, T1 const &b) {
+    // variant + vector
+    return a + std::variant<T1,T2>{b};
+}
+
+template <class T1, class T2>
+auto operator+(std::variant<T1, T2> const &a, T2 const &b) {
+    // variant + vector
+    // 为什么 vector<T2> const& b  - > T2 const &b ?  T2 is more generic type
+    return a + std::variant<T1,T2>{b};
+}
+
+
+//template <class T1, class T2>
+//std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
+//    // 请实现自动匹配容器中具体类型的打印！10 分
+//    std::visit([&](auto const& t){
+//        os<<t;
+//    },a);
+//    return os;
+//}
+//
+template <class T1, class... args>
+std::ostream &operator<<(std::ostream &os, std::variant<T1, args...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
+    std::visit([&](auto const& t){
+        os<<t;
+    },a);
+    return os;
 }
 
 int main() {
@@ -50,6 +87,13 @@ int main() {
 
     // 应该输出 {9.28, 17.436, 7.236}
     std::cout << d << std::endl;
+
+    //test for Variadic Templates
+    std::variant<std::vector<int>,std::string,std::vector<double>> test_val;
+    test_val = c;
+    std::cout << test_val << std::endl;
+    test_val = "i am a string";
+    std::cout << test_val;
 
     return 0;
 }
