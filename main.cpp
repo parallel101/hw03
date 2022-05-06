@@ -15,32 +15,12 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     return os;
 }
 
-template <bool B, class T1, class T2>
-struct _if;
-
-template <class T1,class T2>
-struct _if<true, T1, T2>
-{
-    using value = T1;
-};
-
-template <class T1,class T2>
-struct _if<false, T1, T2>
-{
-    using value = T2;
-};
-
-template <class T1, class T2>
-struct bigger_size
-{
-    using value = typename _if< bool(sizeof(T1)>sizeof(T2)), T1, T2 >::value;
-};
-
 // 请修复这个函数的定义：10 分
-template <class T1, class T2, class T0 = typename bigger_size<T1,T2>::value>
-std::vector<T0> operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+template <class T1, class T2>
+auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
+    using T0 = decltype(T1()+T2());
     const size_t s = std::min(a.size(), b.size());
     std::vector<T0> v(s);
     for(int i=0; i<s; i++){
