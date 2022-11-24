@@ -7,3 +7,5 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 add_executable(main main.cpp)
+
+target_include_directories(main PRIVATE .)
