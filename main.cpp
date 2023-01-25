@@ -25,21 +25,21 @@ auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     return c;
 }
 
-template <class T1, class T2, class T3>
-auto operator+(std::variant<T1, T2> const &a, T3 const &b) {
+template <class T, class... V>
+auto operator+(std::variant<V...> const &a, T const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
     return std::visit([&](auto const &x) {
         return x + b; }, a);
 }
 
-template <class T1, class T2, class T3>
-auto operator+(T1 const &a, std::variant<T2, T3> const &b) {
+template <class T, class... V>
+auto operator+(T const &a, std::variant<V...> const &b) {
     return std::visit([&](auto const &x) {
         return a + x; }, b);
 }
 
-template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
+template <class R, class... T>
+std::ostream &operator<<(std::ostream &os, std::variant<R, T...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
     return std::visit([&](auto const &x) -> std::ostream & {
         os << x;
@@ -60,7 +60,7 @@ int main() {
     // 应该输出 {4.14, 6.718, 2.618}
     std::cout << c << std::endl;
 
-    std::variant<std::vector<int>, std::vector<double>> d = c;
+    std::variant<std::vector<int>, std::vector<double>, std::vector<float>> d = c;
     std::variant<std::vector<int>, std::vector<double>> e = a;
     d = d + c + e;
 
