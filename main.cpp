@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <variant>
-
+//哈
 // 请修复这个函数的定义：10 分
 std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
     os << "{";
