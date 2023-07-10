@@ -48,13 +48,6 @@ std::variant<T1, T2> operator+(T1  const &a, std::variant<T1, T2> const &b) {
     return b + std::variant<T1, T2>{a};
 }
 
-template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
-    // 请实现自动匹配容器中具体类型的打印！10 分
-    std::visit([&](const auto& i){std::cout << i << std::endl;}, a);
-    return os;
-}
-
 template <class T1,class... Targs>
 std::ostream &operator<<(std::ostream &os, std::variant<T1,Targs...> const &args){
     std::visit([&](const auto& i){std::cout << i << std::endl;}, args);
@@ -81,7 +74,7 @@ int main() {
     // 应该输出 {9.28, 17.436, 7.236}
     std::cout << d << std::endl;
 
-    std::variant<int, double, std::vector<int>> temp{666};
+    std::variant<int> temp{666};
     std::cout << temp << std::endl;
 
     return 0;
