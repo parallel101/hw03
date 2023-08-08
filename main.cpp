@@ -17,7 +17,7 @@ std::ostream &operator<<(std::ostream &os, std::vector<T> const &a) {
 
 // 请修复这个函数的定义：10 分
 template <class T1, class T2>
-auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
+constexpr auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
     // 请实现列表的逐元素加法！10 分
     // 例如 {1, 2} + {3, 4} = {4, 6}
 	using T0 = decltype(T1{} + T2{});
@@ -27,10 +27,10 @@ auto operator+(std::vector<T1> const &a, std::vector<T2> const &b) {
 	return res;
 }
 
-template <class T1, class T2>
-std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T2> const &b) {
+template <class T1, class... Targs>
+std::variant<T1, Targs...> operator+(std::variant<T1, Targs...> const &a, std::variant<T1, Targs...> const &b) {
     // 请实现自动匹配容器中具体类型的加法！10 分
-	return std::visit([&] (auto const &n1, auto const &n2) -> std::variant<T1, T2> {
+	return std::visit([&] (auto const &n1, auto const &n2) -> std::variant<T1, Targs...> {
 		return {n1 + n2};
 	}, a, b);
 }
@@ -38,12 +38,17 @@ std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, std::variant<T1, T
 template <class T1, class T2, typename T3, 
 		 std::enable_if_t<std::is_same_v<T3, T1> || std::is_same_v<T3, T2>, int> = 0>
 std::variant<T1, T2> operator+(std::variant<T1, T2> const &a, T3 const &b) {
-    // 请实现自动匹配容器中具体类型的加法！10 分
 	return a + std::variant<T1, T2>{b};
 }
 
-template <class T1, class T2>
-std::ostream &operator<<(std::ostream &os, std::variant<T1, T2> const &a) {
+template <class T1, class T2, typename T3, 
+		 std::enable_if_t<std::is_same_v<T3, T1> || std::is_same_v<T3, T2>, int> = 0>
+std::variant<T1, T2> operator+(T3 const &a, std::variant<T1, T2> const &b) {
+	return std::variant<T1, T2>{a} + b;
+}
+
+template <class T1, class... Targs>
+std::ostream &operator<<(std::ostream &os, std::variant<T1, Targs...> const &a) {
     // 请实现自动匹配容器中具体类型的打印！10 分
 	std::visit([&] (auto const &n) -> void {
 		os << n;
@@ -66,7 +71,8 @@ int main() {
 
     std::variant<std::vector<int>, std::vector<double>> d = c;
     std::variant<std::vector<int>, std::vector<double>> e = a;
-    d = c + d + e;
+	// d = c + d + e;
+	d = d + c + e;
 
     // 应该输出 {9.28, 17.436, 7.236}
     std::cout << d << std::endl;
